@@ -23,8 +23,7 @@ import {
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
 import { ClothingItem, ClothingSize, ClothingType } from '../types/clothing';
-import { addClothingItem, deleteClothingItem, getClothingItems } from '../services/clothingService';
-import InitializeData from './InitializeData';
+import { addClothingItem, deleteClothingItem, getClothingItems, updateClothingItem } from '../services/clothingService';
 
 const SIZES: ClothingSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const TYPES: ClothingType[] = ['Shirt', 'Pants', 'Dress', 'Jacket', 'Skirt', 'Shoes', 'Accessory'];
@@ -72,6 +71,7 @@ const AdminDashboard = () => {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const [newItem, setNewItem] = useState({
     name: '',
     description: '',
@@ -97,9 +97,39 @@ const AdminDashboard = () => {
     loadItems();
   }, []);
 
-  const handleOpen = () => setOpen(true);
+  const handleOpen = (item?: ClothingItem) => {
+    if (item) {
+      setSelectedItem(item);
+      setNewItem({
+        name: item.name,
+        description: item.description,
+        brand: item.brand,
+        price: item.price.toString(),
+        color: item.color,
+        size: item.size,
+        type: item.type,
+        imageUrl: item.imageUrl,
+      });
+    } else {
+      setSelectedItem(null);
+      setNewItem({
+        name: '',
+        description: '',
+        brand: '',
+        price: '',
+        color: '',
+        size: '' as ClothingSize,
+        type: '' as ClothingType,
+        imageUrl: '',
+      });
+    }
+    setSelectedImage(null);
+    setOpen(true);
+  };
+
   const handleClose = () => {
     setOpen(false);
+    setSelectedItem(null);
     setNewItem({
       name: '',
       description: '',
@@ -127,23 +157,36 @@ const AdminDashboard = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedImage) {
-      alert('Please select an image');
-      return;
-    }
-
     try {
       setLoading(true);
-      await addClothingItem({
-        ...newItem,
-        price: Number(newItem.price),
-      }, selectedImage);
+
+      if (selectedItem) {
+        // Update existing item
+        await updateClothingItem(
+          selectedItem.id,
+          {
+            ...newItem,
+            price: Number(newItem.price),
+          },
+          selectedImage || undefined
+        );
+      } else {
+        // Add new item
+        if (!selectedImage) {
+          alert('Please select an image');
+          return;
+        }
+        await addClothingItem({
+          ...newItem,
+          price: Number(newItem.price),
+        }, selectedImage);
+      }
       
       handleClose();
       loadItems();
     } catch (error) {
-      console.error('Error adding item:', error);
-      alert('Error adding item');
+      console.error('Error saving item:', error);
+      alert('Error saving item');
     } finally {
       setLoading(false);
     }
@@ -174,16 +217,13 @@ const AdminDashboard = () => {
         alignItems: 'center',
         mb: 4
       }}>
-        <Box>
-          <Typography variant="h5" component="h1">
-            Manage Inventory
-          </Typography>
-          <InitializeData />
-        </Box>
+        <Typography variant="h5" component="h1">
+          Manage Inventory
+        </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={handleOpen}
+          onClick={() => handleOpen()}
           disabled={loading}
         >
           Add New Item
@@ -228,11 +268,13 @@ const AdminDashboard = () => {
                   alt={item.name}
                   sx={{
                     objectFit: 'cover',
+                    cursor: 'pointer',
                   }}
+                  onClick={() => handleOpen(item)}
                 />
                 <CardContent sx={{ p: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Box>
+                    <Box sx={{ flex: 1, cursor: 'pointer' }} onClick={() => handleOpen(item)}>
                       <Typography 
                         variant="subtitle1" 
                         component="div"
@@ -292,12 +334,31 @@ const AdminDashboard = () => {
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>
-          <Typography variant="h6">Add New Item</Typography>
+          <Typography variant="h6">
+            {selectedItem ? 'Edit Item' : 'Add New Item'}
+          </Typography>
         </DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap={2}>
               <Box gridColumn="span 12">
+                {selectedItem && !selectedImage && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Current Image:
+                    </Typography>
+                    <img 
+                      src={selectedItem.imageUrl} 
+                      alt={selectedItem.name}
+                      style={{ 
+                        width: '100%', 
+                        height: 200, 
+                        objectFit: 'cover',
+                        marginBottom: 8
+                      }} 
+                    />
+                  </Box>
+                )}
                 <Button
                   variant="outlined"
                   component="label"
@@ -309,7 +370,7 @@ const AdminDashboard = () => {
                   {loading ? (
                     <CircularProgress size={24} />
                   ) : (
-                    selectedImage ? 'Change Image' : 'Upload Image'
+                    selectedImage ? 'Change Image' : (selectedItem ? 'Change Image' : 'Upload Image')
                   )}
                   <input
                     type="file"
@@ -413,7 +474,7 @@ const AdminDashboard = () => {
             disabled={loading}
             startIcon={loading ? <CircularProgress size={20} /> : <AddIcon />}
           >
-            {loading ? 'Adding...' : 'Add Item'}
+            {loading ? 'Saving...' : (selectedItem ? 'Save Changes' : 'Add Item')}
           </Button>
         </DialogActions>
       </Dialog>

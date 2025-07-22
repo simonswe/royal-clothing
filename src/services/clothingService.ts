@@ -1,13 +1,12 @@
 import { 
   collection, 
   addDoc, 
-  deleteDoc, 
+  deleteDoc,
+  updateDoc, 
   doc, 
   getDocs, 
   query, 
-  where, 
   orderBy, 
-  QueryConstraint,
   FirestoreError
 } from 'firebase/firestore';
 import { 
@@ -63,6 +62,57 @@ export const addClothingItem = async (
   }
 };
 
+export const updateClothingItem = async (
+  id: string,
+  updates: Partial<Omit<ClothingItem, 'id' | 'createdAt' | 'updatedAt'>>,
+  newImageFile?: File
+): Promise<void> => {
+  try {
+    let imageUrl = updates.imageUrl;
+
+    // If there's a new image, upload it and get the URL
+    if (newImageFile) {
+      const timestamp = Date.now();
+      const fileExtension = newImageFile.name.split('.').pop();
+      const filename = `${timestamp}_${Math.random().toString(36).substring(2)}.${fileExtension}`;
+      const imagePath = `clothing/${filename}`;
+      
+      const imageRef = ref(storage, imagePath);
+      await uploadBytes(imageRef, newImageFile);
+      imageUrl = await getDownloadURL(imageRef);
+
+      // If there was an old image, delete it
+      if (updates.imageUrl) {
+        try {
+          const oldImageUrl = updates.imageUrl;
+          const decodedUrl = decodeURIComponent(oldImageUrl);
+          const startIndex = decodedUrl.indexOf('/o/') + 3;
+          const endIndex = decodedUrl.indexOf('?');
+          const oldImagePath = decodedUrl.substring(startIndex, endIndex);
+          const oldImageRef = ref(storage, oldImagePath);
+          await deleteObject(oldImageRef);
+        } catch (error) {
+          console.warn('Error deleting old image:', error);
+        }
+      }
+    }
+
+    // Update the document
+    const docRef = doc(db, COLLECTION_NAME, id);
+    await updateDoc(docRef, {
+      ...updates,
+      ...(imageUrl && { imageUrl }),
+      updatedAt: new Date()
+    });
+  } catch (error) {
+    console.error('Error updating clothing item:', error);
+    throw new FirebaseError(
+      'Failed to update clothing item. Please try again.',
+      error as FirestoreError | StorageError
+    );
+  }
+};
+
 export const deleteClothingItem = async (id: string, imageUrl: string): Promise<void> => {
   try {
     // Extract the path from the Firebase Storage URL
@@ -92,41 +142,50 @@ export const deleteClothingItem = async (id: string, imageUrl: string): Promise<
 
 export const getClothingItems = async (filters?: FilterOptions): Promise<ClothingItem[]> => {
   try {
-    const constraints: QueryConstraint[] = [];
-
-    if (filters) {
-      if (filters.minPrice !== undefined) {
-        constraints.push(where('price', '>=', filters.minPrice));
-      }
-      if (filters.maxPrice !== undefined) {
-        constraints.push(where('price', '<=', filters.maxPrice));
-      }
-      if (filters.brands?.length) {
-        constraints.push(where('brand', 'in', filters.brands));
-      }
-      if (filters.colors?.length) {
-        constraints.push(where('color', 'in', filters.colors));
-      }
-      if (filters.sizes?.length) {
-        constraints.push(where('size', 'in', filters.sizes));
-      }
-      if (filters.types?.length) {
-        constraints.push(where('type', 'in', filters.types));
-      }
-    }
-
-    // Always sort by newest first
-    constraints.push(orderBy('createdAt', 'desc'));
-    
-    const q = query(collection(db, COLLECTION_NAME), ...constraints);
-    const querySnapshot = await getDocs(q);
-    
-    return querySnapshot.docs.map(doc => ({
+    let q = query(collection(db, COLLECTION_NAME), orderBy('createdAt', 'desc'));
+    let items = (await getDocs(q)).docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt.toDate(),
       updatedAt: doc.data().updatedAt.toDate()
     })) as ClothingItem[];
+
+    // Apply filters in memory for more flexible filtering
+    if (filters) {
+      items = items.filter(item => {
+        // Price filters
+        if (typeof filters.minPrice === 'number' && item.price < filters.minPrice) {
+          return false;
+        }
+        if (typeof filters.maxPrice === 'number' && item.price > filters.maxPrice) {
+          return false;
+        }
+
+        // Size filter
+        if (filters.sizes && filters.sizes.length > 0 && !filters.sizes.includes(item.size)) {
+          return false;
+        }
+
+        // Type filter
+        if (filters.types && filters.types.length > 0 && !filters.types.includes(item.type)) {
+          return false;
+        }
+
+        // Brand filter
+        if (filters.brands && filters.brands.length > 0 && !filters.brands.includes(item.brand)) {
+          return false;
+        }
+
+        // Color filter
+        if (filters.colors && filters.colors.length > 0 && !filters.colors.includes(item.color)) {
+          return false;
+        }
+
+        return true;
+      });
+    }
+
+    return items;
   } catch (error) {
     console.error('Error fetching clothing items:', error);
     throw new FirebaseError(

@@ -5,7 +5,6 @@ import {
   CardMedia,
   Typography,
   Box,
-  TextField,
   Select,
   MenuItem,
   FormControl,
@@ -16,6 +15,9 @@ import {
   useMediaQuery,
   Button,
   Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
 } from '@mui/material';
 import { FilterList as FilterIcon, Close as CloseIcon } from '@mui/icons-material';
 import { ClothingItem, ClothingSize, ClothingType, FilterOptions } from '../types/clothing';
@@ -23,45 +25,52 @@ import { getClothingItems } from '../services/clothingService';
 
 const SIZES: ClothingSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const TYPES: ClothingType[] = ['Shirt', 'Pants', 'Dress', 'Jacket', 'Skirt', 'Shoes', 'Accessory'];
-
 const DRAWER_WIDTH = 280;
 
 const Catalogue = () => {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({});
+  const [pendingFilters, setPendingFilters] = useState<FilterOptions>({});
   const [loading, setLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const fetchedItems = await getClothingItems(filters);
-        setItems(fetchedItems);
-      } catch (error) {
-        console.error('Error loading items:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadItems();
   }, [filters]);
 
-  const handlePriceChange = (type: 'min' | 'max', value: string) => {
-    const numValue = value === '' ? undefined : Number(value);
-    setFilters(prev => ({
-      ...prev,
-      [type === 'min' ? 'minPrice' : 'maxPrice']: numValue
-    }));
+  const loadItems = async () => {
+    try {
+      setLoading(true);
+      const fetchedItems = await getClothingItems(filters);
+      setItems(fetchedItems);
+    } catch (error) {
+      console.error('Error loading items:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleMultiSelect = (field: keyof FilterOptions, value: unknown) => {
-    setFilters(prev => ({
+    const selectedValues = value as string[];
+    setPendingFilters(prev => ({
       ...prev,
-      [field]: (value as string[]).length > 0 ? value : undefined
+      [field]: selectedValues.length > 0 ? selectedValues : undefined
     }));
+  };
+
+  const handleApplyFilters = () => {
+    setFilters(pendingFilters);
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    setPendingFilters({});
   };
 
   const FilterPanel = () => (
@@ -71,13 +80,17 @@ const Catalogue = () => {
         height: '100%',
         p: 3,
         bgcolor: 'background.paper',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden', // Prevent any unwanted overflow
       }}
     >
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
-        mb: 4
+        mb: 4,
+        width: '100%'
       }}>
         <Typography variant="h6" component="h2">
           Filters
@@ -89,48 +102,51 @@ const Catalogue = () => {
         )}
       </Box>
 
-      <Box display="flex" flexDirection="column" gap={3}>
-        <Box>
-          <Typography variant="subtitle2" gutterBottom sx={{ mb: 1.5 }}>
-            Price Range
-          </Typography>
-          <Box display="flex" gap={2}>
-            <TextField
-              fullWidth
-              placeholder="Min"
-              type="number"
-              size="small"
-              value={filters.minPrice || ''}
-              onChange={(e) => handlePriceChange('min', e.target.value)}
-            />
-            <TextField
-              fullWidth
-              placeholder="Max"
-              type="number"
-              size="small"
-              value={filters.maxPrice || ''}
-              onChange={(e) => handlePriceChange('max', e.target.value)}
-            />
-          </Box>
-        </Box>
-
-        <Box>
+      <Box 
+        display="flex" 
+        flexDirection="column" 
+        gap={3}
+        sx={{ 
+          width: '100%',
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          '& .MuiSelect-select': {
+            whiteSpace: 'normal', // Allow text to wrap
+          },
+          '& .MuiChip-root': {
+            maxWidth: '100%', // Ensure chips don't overflow
+            '& .MuiChip-label': {
+              whiteSpace: 'normal',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }
+          }
+        }}
+      >
+        <Box sx={{ width: '100%' }}>
           <Typography variant="subtitle2" gutterBottom sx={{ mb: 1.5 }}>
             Sizes
           </Typography>
           <FormControl fullWidth size="small">
-            <Select<ClothingSize[]>
+            <Select
               multiple
-              value={filters.sizes || []}
+              value={pendingFilters.sizes || []}
               onChange={(e) => handleMultiSelect('sizes', e.target.value)}
               renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {(selected as ClothingSize[]).map((value) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: '100%' }}>
+                  {(selected as string[]).map((value) => (
                     <Chip key={value} label={value} size="small" />
                   ))}
                 </Box>
               )}
               displayEmpty
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 250
+                  }
+                }
+              }}
             >
               <MenuItem disabled value="">
                 Select sizes
@@ -144,23 +160,30 @@ const Catalogue = () => {
           </FormControl>
         </Box>
 
-        <Box>
+        <Box sx={{ width: '100%' }}>
           <Typography variant="subtitle2" gutterBottom sx={{ mb: 1.5 }}>
             Categories
           </Typography>
           <FormControl fullWidth size="small">
-            <Select<ClothingType[]>
+            <Select
               multiple
-              value={filters.types || []}
+              value={pendingFilters.types || []}
               onChange={(e) => handleMultiSelect('types', e.target.value)}
               renderValue={(selected) => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {(selected as ClothingType[]).map((value) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, maxWidth: '100%' }}>
+                  {(selected as string[]).map((value) => (
                     <Chip key={value} label={value} size="small" />
                   ))}
                 </Box>
               )}
               displayEmpty
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 250
+                  }
+                }
+              }}
             >
               <MenuItem disabled value="">
                 Select categories
@@ -172,6 +195,31 @@ const Catalogue = () => {
               ))}
             </Select>
           </FormControl>
+        </Box>
+
+        <Box sx={{ mt: 2, width: '100%' }}>
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleApplyFilters}
+            disabled={loading}
+            sx={{ mb: 2 }}
+          >
+            Apply Filters
+          </Button>
+          
+          {(Object.keys(pendingFilters).length > 0) && (
+            <Button
+              variant="outlined"
+              color="primary"
+              fullWidth
+              onClick={handleClearFilters}
+              disabled={loading}
+            >
+              Clear All
+            </Button>
+          )}
         </Box>
       </Box>
     </Box>
@@ -302,7 +350,17 @@ const Catalogue = () => {
               gap={2}
             >
               {items.map((item) => (
-                <Card key={item.id}>
+                <Card 
+                  key={item.id}
+                  onClick={() => setSelectedItem(item)}
+                  sx={{ 
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      transition: 'transform 0.2s ease-in-out',
+                    }
+                  }}
+                >
                   <CardMedia
                     component="img"
                     height="400"
@@ -330,15 +388,26 @@ const Catalogue = () => {
                     >
                       {item.brand}
                     </Typography>
-                    <Typography 
-                      variant="subtitle2"
-                      sx={{ 
-                        fontWeight: 600,
-                        color: 'text.primary'
-                      }}
-                    >
-                      ${item.price}
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography 
+                        variant="subtitle2"
+                        sx={{ 
+                          fontWeight: 600,
+                          color: 'text.primary'
+                        }}
+                      >
+                        ${item.price}
+                      </Typography>
+                      <Chip 
+                        label={item.size} 
+                        size="small"
+                        sx={{ 
+                          fontWeight: 500,
+                          bgcolor: 'primary.main',
+                          color: 'primary.contrastText'
+                        }}
+                      />
+                    </Box>
                   </CardContent>
                 </Card>
               ))}
@@ -361,6 +430,67 @@ const Catalogue = () => {
       >
         <FilterPanel />
       </Drawer>
+
+      {/* Item Details Dialog */}
+      <Dialog 
+        open={!!selectedItem} 
+        onClose={() => setSelectedItem(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        {selectedItem && (
+          <>
+            <DialogTitle>
+              <Typography variant="h6" component="div">
+                {selectedItem.name}
+              </Typography>
+              <Typography variant="subtitle2" color="text.secondary">
+                {selectedItem.brand}
+              </Typography>
+            </DialogTitle>
+            <DialogContent>
+              <Box sx={{ mb: 2 }}>
+                <img 
+                  src={selectedItem.imageUrl} 
+                  alt={selectedItem.name}
+                  style={{ 
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '500px',
+                    objectFit: 'cover'
+                  }}
+                />
+              </Box>
+              <Typography variant="body1" paragraph>
+                {selectedItem.description}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Chip 
+                  label={`Size: ${selectedItem.size}`}
+                  sx={{ fontWeight: 500 }}
+                />
+                <Chip 
+                  label={`Type: ${selectedItem.type}`}
+                  sx={{ fontWeight: 500 }}
+                />
+                <Chip 
+                  label={`Color: ${selectedItem.color}`}
+                  sx={{ fontWeight: 500 }}
+                />
+              </Box>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600,
+                  color: 'primary.main'
+                }}
+              >
+                ${selectedItem.price}
+              </Typography>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
     </Box>
   );
 };
