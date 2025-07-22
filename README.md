@@ -45,11 +45,10 @@ The default admin password is `admin123`. In a production environment, you shoul
 
 ## Technologies Used
 
-- React 18
+- React 18 + Vite
 - TypeScript
 - Material-UI
 - Firebase (Firestore & Storage)
-- Vite
 
 ## Project Structure
 
