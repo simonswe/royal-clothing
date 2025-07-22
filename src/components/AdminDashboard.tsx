@@ -18,6 +18,8 @@ import {
   IconButton,
   Container,
   Divider,
+  Skeleton,
+  CircularProgress,
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
 import { ClothingItem, ClothingSize, ClothingType } from '../types/clothing';
@@ -26,6 +28,45 @@ import InitializeData from './InitializeData';
 
 const SIZES: ClothingSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const TYPES: ClothingType[] = ['Shirt', 'Pants', 'Dress', 'Jacket', 'Skirt', 'Shoes', 'Accessory'];
+
+// Loading skeleton for products
+const LoadingSkeleton = () => (
+  <>
+    {[1, 2, 3, 4].map((item) => (
+      <Box 
+        key={item}
+        gridColumn={{ 
+          xs: 'span 12',
+          sm: 'span 6',
+          md: 'span 4',
+          lg: 'span 3'
+        }}
+      >
+        <Card>
+          <Skeleton 
+            variant="rectangular" 
+            height={400}
+            animation="wave"
+          />
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Box sx={{ flex: 1 }}>
+                <Skeleton animation="wave" height={24} width="80%" sx={{ mb: 1 }} />
+                <Skeleton animation="wave" height={20} width="60%" sx={{ mb: 1 }} />
+              </Box>
+              <Skeleton animation="wave" variant="circular" width={32} height={32} />
+            </Box>
+            <Divider sx={{ my: 1 }} />
+            <Skeleton animation="wave" height={20} width="40%" sx={{ mb: 0.5 }} />
+            <Skeleton animation="wave" height={20} width="40%" sx={{ mb: 0.5 }} />
+            <Skeleton animation="wave" height={20} width="40%" sx={{ mb: 0.5 }} />
+            <Skeleton animation="wave" height={24} width="30%" sx={{ mt: 1 }} />
+          </CardContent>
+        </Card>
+      </Box>
+    ))}
+  </>
+);
 
 const AdminDashboard = () => {
   const [items, setItems] = useState<ClothingItem[]>([]);
@@ -150,83 +191,103 @@ const AdminDashboard = () => {
       </Box>
 
       <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap={3}>
-        {items.map((item) => (
+        {loading ? (
+          <LoadingSkeleton />
+        ) : items.length === 0 ? (
           <Box 
-            key={item.id} 
-            gridColumn={{ 
-              xs: 'span 12',
-              sm: 'span 6',
-              md: 'span 4',
-              lg: 'span 3'
+            gridColumn="span 12"
+            sx={{ 
+              textAlign: 'center', 
+              py: 8,
+              color: 'text.secondary'
             }}
           >
-            <Card>
-              <CardMedia
-                component="img"
-                height="400"
-                image={item.imageUrl}
-                alt={item.name}
-                sx={{
-                  objectFit: 'cover',
-                }}
-              />
-              <CardContent sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Box>
+            <Typography variant="h6" gutterBottom>
+              No items in inventory
+            </Typography>
+            <Typography variant="body2">
+              Click "Add New Item" to start adding products
+            </Typography>
+          </Box>
+        ) : (
+          items.map((item) => (
+            <Box 
+              key={item.id} 
+              gridColumn={{ 
+                xs: 'span 12',
+                sm: 'span 6',
+                md: 'span 4',
+                lg: 'span 3'
+              }}
+            >
+              <Card>
+                <CardMedia
+                  component="img"
+                  height="400"
+                  image={item.imageUrl}
+                  alt={item.name}
+                  sx={{
+                    objectFit: 'cover',
+                  }}
+                />
+                <CardContent sx={{ p: 2 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                      <Typography 
+                        variant="subtitle1" 
+                        component="div"
+                        sx={{ 
+                          fontWeight: 500,
+                          mb: 0.5
+                        }}
+                      >
+                        {item.name}
+                      </Typography>
+                      <Typography 
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ mb: 1 }}
+                      >
+                        {item.brand}
+                      </Typography>
+                    </Box>
+                    <IconButton
+                      onClick={() => handleDelete(item)}
+                      disabled={loading}
+                      color="error"
+                      size="small"
+                      sx={{ mt: -0.5 }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                  <Divider sx={{ my: 1 }} />
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Type: {item.type}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Size: {item.size}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Color: {item.color}
+                    </Typography>
                     <Typography 
-                      variant="subtitle1" 
-                      component="div"
+                      variant="subtitle2"
                       sx={{ 
-                        fontWeight: 500,
-                        mb: 0.5
+                        fontWeight: 600,
+                        color: 'text.primary',
+                        mt: 1
                       }}
                     >
-                      {item.name}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary"
-                      sx={{ mb: 1 }}
-                    >
-                      {item.brand}
+                      ${item.price}
                     </Typography>
                   </Box>
-                  <IconButton
-                    onClick={() => handleDelete(item)}
-                    disabled={loading}
-                    color="error"
-                    size="small"
-                    sx={{ mt: -0.5 }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-                <Divider sx={{ my: 1 }} />
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Type: {item.type}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Size: {item.size}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Color: {item.color}
-                  </Typography>
-                  <Typography 
-                    variant="subtitle2"
-                    sx={{ 
-                      fontWeight: 600,
-                      color: 'text.primary',
-                      mt: 1
-                    }}
-                  >
-                    ${item.price}
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
-        ))}
+                </CardContent>
+              </Card>
+            </Box>
+          ))
+        )}
       </Box>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -243,13 +304,19 @@ const AdminDashboard = () => {
                   fullWidth
                   startIcon={<UploadIcon />}
                   sx={{ height: 200, borderStyle: 'dashed' }}
+                  disabled={loading}
                 >
-                  {selectedImage ? 'Change Image' : 'Upload Image'}
+                  {loading ? (
+                    <CircularProgress size={24} />
+                  ) : (
+                    selectedImage ? 'Change Image' : 'Upload Image'
+                  )}
                   <input
                     type="file"
                     hidden
                     accept="image/*"
                     onChange={handleImageChange}
+                    disabled={loading}
                   />
                 </Button>
                 {selectedImage && (
@@ -344,9 +411,9 @@ const AdminDashboard = () => {
             onClick={handleSubmit} 
             variant="contained" 
             disabled={loading}
-            startIcon={<AddIcon />}
+            startIcon={loading ? <CircularProgress size={20} /> : <AddIcon />}
           >
-            Add Item
+            {loading ? 'Adding...' : 'Add Item'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -9,16 +9,13 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   Chip,
-  SelectChangeEvent,
-  Container,
   IconButton,
   Drawer,
   useTheme,
   useMediaQuery,
   Button,
-  Paper,
+  Skeleton,
 } from '@mui/material';
 import { FilterList as FilterIcon, Close as CloseIcon } from '@mui/icons-material';
 import { ClothingItem, ClothingSize, ClothingType, FilterOptions } from '../types/clothing';
@@ -180,6 +177,36 @@ const Catalogue = () => {
     </Box>
   );
 
+  // Loading skeleton for products
+  const LoadingSkeleton = () => (
+    <>
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+        <Box 
+          key={item}
+          gridColumn={{ 
+            xs: 'span 6',
+            sm: 'span 6',
+            md: 'span 4',
+            lg: 'span 3'
+          }}
+        >
+          <Card>
+            <Skeleton 
+              variant="rectangular" 
+              height={400}
+              animation="wave"
+            />
+            <CardContent>
+              <Skeleton animation="wave" height={24} width="80%" sx={{ mb: 1 }} />
+              <Skeleton animation="wave" height={20} width="60%" sx={{ mb: 1 }} />
+              <Skeleton animation="wave" height={24} width="40%" />
+            </CardContent>
+          </Card>
+        </Box>
+      ))}
+    </>
+  );
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {/* Desktop Filters */}
@@ -226,6 +253,7 @@ const Catalogue = () => {
               onClick={() => setDrawerOpen(true)}
               fullWidth
               variant="outlined"
+              disabled={loading}
             >
               Filters
             </Button>
@@ -234,58 +262,88 @@ const Catalogue = () => {
 
         {/* Products Grid */}
         <Box sx={{ p: { xs: 2, md: 4 } }}>
-          <Box 
-            display="grid" 
-            gridTemplateColumns={{
-              xs: 'repeat(2, 1fr)',
-              sm: 'repeat(3, 1fr)',
-              md: 'repeat(3, 1fr)',
-              lg: 'repeat(4, 1fr)',
-            }}
-            gap={2}
-          >
-            {items.map((item) => (
-              <Card key={item.id}>
-                <CardMedia
-                  component="img"
-                  height="400"
-                  image={item.imageUrl}
-                  alt={item.name}
-                  sx={{
-                    objectFit: 'cover',
-                  }}
-                />
-                <CardContent sx={{ p: 2 }}>
-                  <Typography 
-                    variant="subtitle1" 
-                    component="div"
-                    sx={{ 
-                      fontWeight: 500,
-                      mb: 0.5
+          {loading ? (
+            <Box 
+              display="grid" 
+              gridTemplateColumns={{
+                xs: 'repeat(2, 1fr)',
+                sm: 'repeat(3, 1fr)',
+                md: 'repeat(3, 1fr)',
+                lg: 'repeat(4, 1fr)',
+              }}
+              gap={2}
+            >
+              <LoadingSkeleton />
+            </Box>
+          ) : items.length === 0 ? (
+            <Box 
+              sx={{ 
+                textAlign: 'center', 
+                py: 8,
+                color: 'text.secondary'
+              }}
+            >
+              <Typography variant="h6" gutterBottom>
+                No items found
+              </Typography>
+              <Typography variant="body2">
+                Try adjusting your filters to find what you're looking for
+              </Typography>
+            </Box>
+          ) : (
+            <Box 
+              display="grid" 
+              gridTemplateColumns={{
+                xs: 'repeat(2, 1fr)',
+                sm: 'repeat(3, 1fr)',
+                md: 'repeat(3, 1fr)',
+                lg: 'repeat(4, 1fr)',
+              }}
+              gap={2}
+            >
+              {items.map((item) => (
+                <Card key={item.id}>
+                  <CardMedia
+                    component="img"
+                    height="400"
+                    image={item.imageUrl}
+                    alt={item.name}
+                    sx={{
+                      objectFit: 'cover',
                     }}
-                  >
-                    {item.name}
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{ mb: 1 }}
-                  >
-                    {item.brand}
-                  </Typography>
-                  <Typography 
-                    variant="subtitle2"
-                    sx={{ 
-                      fontWeight: 600,
-                      color: 'text.primary'
-                    }}
-                  >
-                    ${item.price}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+                  />
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography 
+                      variant="subtitle1" 
+                      component="div"
+                      sx={{ 
+                        fontWeight: 500,
+                        mb: 0.5
+                      }}
+                    >
+                      {item.name}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      {item.brand}
+                    </Typography>
+                    <Typography 
+                      variant="subtitle2"
+                      sx={{ 
+                        fontWeight: 600,
+                        color: 'text.primary'
+                      }}
+                    >
+                      ${item.price}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          )}
         </Box>
       </Box>
 
