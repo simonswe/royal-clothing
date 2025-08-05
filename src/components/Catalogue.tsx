@@ -218,10 +218,21 @@ const Catalogue = () => {
             Apply Filters
           </Button>
           
+          <Button
+            variant="outlined"
+            color="primary"
+            fullWidth
+            onClick={handleClearFilters}
+            disabled={loading}
+            sx={{ mb: 2 }}
+          >
+            Reset Filters
+          </Button>
+          
           {(Object.keys(pendingFilters).length > 0) && (
             <Button
-              variant="outlined"
-              color="primary"
+              variant="text"
+              color="error"
               fullWidth
               onClick={handleClearFilters}
               disabled={loading}
