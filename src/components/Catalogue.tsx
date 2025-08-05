@@ -118,7 +118,6 @@ const Catalogue = () => {
           width: '100%',
           overflowY: 'auto',
           overflowX: 'hidden',
-          flex: 1,
           '& .MuiSelect-select': {
             whiteSpace: 'normal',
           },
@@ -206,7 +205,8 @@ const Catalogue = () => {
           </FormControl>
         </Box>
 
-        <Box sx={{ mt: 'auto', width: '100%' }}>
+        {/* Filter Action Buttons */}
+        <Box sx={{ width: '100%' }}>
           <Button
             variant="contained"
             color="primary"
