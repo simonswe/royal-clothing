@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, useTheme, useMediaQuery, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, Drawer, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useState } from 'react';
@@ -10,8 +10,6 @@ interface NavbarProps {
 
 const Navbar = ({ isAdmin, setIsAdmin }: NavbarProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleLogout = () => {
     setIsAdmin(false);

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
-  CardMedia,
   Typography,
   Box,
   Select,

@@ -13,7 +13,6 @@ import {
   InputLabel,
   Card,
   CardContent,
-  CardMedia,
   Typography,
   IconButton,
   Container,
@@ -21,9 +20,6 @@ import {
   Skeleton,
   CircularProgress,
   Alert,
-  useTheme,
-  useMediaQuery,
-  Chip,
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, Upload as UploadIcon, Edit as EditIcon, Close as CloseIcon } from '@mui/icons-material';
 import { ClothingItem, ClothingSize, ClothingType } from '../types/clothing';
@@ -89,8 +85,6 @@ const AdminDashboard = () => {
   });
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [error, setError] = useState('');
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const loadItems = async () => {
     try {
