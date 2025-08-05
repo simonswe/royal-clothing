@@ -18,14 +18,17 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
+  Badge,
 } from '@mui/material';
 import { FilterList as FilterIcon, Close as CloseIcon } from '@mui/icons-material';
 import { ClothingItem, ClothingSize, ClothingType, FilterOptions } from '../types/clothing';
 import { getClothingItems } from '../services/clothingService';
+import ImageCarousel from './ImageCarousel';
 
 const SIZES: ClothingSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const TYPES: ClothingType[] = ['Shirt', 'Pants', 'Dress', 'Jacket', 'Skirt', 'Shoes', 'Accessory'];
-const DRAWER_WIDTH = 280;
+const DRAWER_WIDTH = 320;
 
 const Catalogue = () => {
   const [items, setItems] = useState<ClothingItem[]>([]);
@@ -35,7 +38,7 @@ const Catalogue = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ClothingItem | null>(null);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
 
   useEffect(() => {
     loadItems();
@@ -73,16 +76,22 @@ const Catalogue = () => {
     setPendingFilters({});
   };
 
+  const getActiveFiltersCount = () => {
+    return Object.values(pendingFilters).filter(value => 
+      value && (Array.isArray(value) ? value.length > 0 : true)
+    ).length;
+  };
+
   const FilterPanel = () => (
     <Box 
       sx={{ 
-        width: isMobile ? '100%' : DRAWER_WIDTH,
+        width: '100%',
         height: '100%',
-        p: 3,
+        p: { xs: 2, sm: 3 },
         bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden', // Prevent any unwanted overflow
+        overflow: 'hidden',
       }}
     >
       <Box sx={{ 
@@ -92,7 +101,7 @@ const Catalogue = () => {
         mb: 4,
         width: '100%'
       }}>
-        <Typography variant="h6" component="h2">
+        <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
           Filters
         </Typography>
         {isMobile && (
@@ -110,11 +119,12 @@ const Catalogue = () => {
           width: '100%',
           overflowY: 'auto',
           overflowX: 'hidden',
+          flex: 1,
           '& .MuiSelect-select': {
-            whiteSpace: 'normal', // Allow text to wrap
+            whiteSpace: 'normal',
           },
           '& .MuiChip-root': {
-            maxWidth: '100%', // Ensure chips don't overflow
+            maxWidth: '100%',
             '& .MuiChip-label': {
               whiteSpace: 'normal',
               overflow: 'hidden',
@@ -124,7 +134,7 @@ const Catalogue = () => {
         }}
       >
         <Box sx={{ width: '100%' }}>
-          <Typography variant="subtitle2" gutterBottom sx={{ mb: 1.5 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ mb: 1.5, fontWeight: 600 }}>
             Sizes
           </Typography>
           <FormControl fullWidth size="small">
@@ -161,7 +171,7 @@ const Catalogue = () => {
         </Box>
 
         <Box sx={{ width: '100%' }}>
-          <Typography variant="subtitle2" gutterBottom sx={{ mb: 1.5 }}>
+          <Typography variant="subtitle2" gutterBottom sx={{ mb: 1.5, fontWeight: 600 }}>
             Categories
           </Typography>
           <FormControl fullWidth size="small">
@@ -197,7 +207,7 @@ const Catalogue = () => {
           </FormControl>
         </Box>
 
-        <Box sx={{ mt: 2, width: '100%' }}>
+        <Box sx={{ mt: 'auto', width: '100%' }}>
           <Button
             variant="contained"
             color="primary"
@@ -233,21 +243,24 @@ const Catalogue = () => {
           key={item}
           gridColumn={{ 
             xs: 'span 6',
-            sm: 'span 6',
-            md: 'span 4',
+            sm: 'span 4',
+            md: 'span 3',
             lg: 'span 3'
           }}
         >
           <Card>
             <Skeleton 
               variant="rectangular" 
-              height={400}
+              height={300}
               animation="wave"
             />
-            <CardContent>
-              <Skeleton animation="wave" height={24} width="80%" sx={{ mb: 1 }} />
-              <Skeleton animation="wave" height={20} width="60%" sx={{ mb: 1 }} />
-              <Skeleton animation="wave" height={24} width="40%" />
+            <CardContent sx={{ p: 2 }}>
+              <Skeleton animation="wave" height={20} width="80%" sx={{ mb: 1 }} />
+              <Skeleton animation="wave" height={16} width="60%" sx={{ mb: 1 }} />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Skeleton animation="wave" height={20} width="30%" />
+                <Skeleton animation="wave" height={24} width={40} />
+              </Box>
             </CardContent>
           </Card>
         </Box>
@@ -268,7 +281,7 @@ const Catalogue = () => {
             borderColor: 'divider',
             height: '100vh',
             position: 'sticky',
-            top: 80,
+            top: 72,
             overflowY: 'auto',
           }}
         >
@@ -289,7 +302,7 @@ const Catalogue = () => {
         {isMobile && (
           <Box sx={{ 
             position: 'sticky', 
-            top: 80, 
+            top: 72, 
             zIndex: 1, 
             bgcolor: 'background.default',
             borderBottom: '1px solid',
@@ -302,24 +315,35 @@ const Catalogue = () => {
               fullWidth
               variant="outlined"
               disabled={loading}
+              sx={{
+                justifyContent: 'space-between',
+                px: 2,
+              }}
             >
-              Filters
+              <span>Filters</span>
+              {getActiveFiltersCount() > 0 && (
+                <Badge 
+                  badgeContent={getActiveFiltersCount()} 
+                  color="primary"
+                  sx={{ '& .MuiBadge-badge': { fontSize: '0.75rem' } }}
+                />
+              )}
             </Button>
           </Box>
         )}
 
         {/* Products Grid */}
-        <Box sx={{ p: { xs: 2, md: 4 } }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
           {loading ? (
             <Box 
               display="grid" 
               gridTemplateColumns={{
                 xs: 'repeat(2, 1fr)',
                 sm: 'repeat(3, 1fr)',
-                md: 'repeat(3, 1fr)',
+                md: 'repeat(4, 1fr)',
                 lg: 'repeat(4, 1fr)',
               }}
-              gap={2}
+              gap={{ xs: 2, sm: 3 }}
             >
               <LoadingSkeleton />
             </Box>
@@ -331,7 +355,7 @@ const Catalogue = () => {
                 color: 'text.secondary'
               }}
             >
-              <Typography variant="h6" gutterBottom>
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                 No items found
               </Typography>
               <Typography variant="body2">
@@ -344,10 +368,10 @@ const Catalogue = () => {
               gridTemplateColumns={{
                 xs: 'repeat(2, 1fr)',
                 sm: 'repeat(3, 1fr)',
-                md: 'repeat(3, 1fr)',
+                md: 'repeat(4, 1fr)',
                 lg: 'repeat(4, 1fr)',
               }}
-              gap={2}
+              gap={{ xs: 2, sm: 3 }}
             >
               {items.map((item) => (
                 <Card 
@@ -355,28 +379,33 @@ const Catalogue = () => {
                   onClick={() => setSelectedItem(item)}
                   sx={{ 
                     cursor: 'pointer',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
                     '&:hover': {
                       transform: 'translateY(-4px)',
                       transition: 'transform 0.2s ease-in-out',
                     }
                   }}
                 >
-                  <CardMedia
-                    component="img"
-                    height="400"
-                    image={item.imageUrl}
-                    alt={item.name}
-                    sx={{
-                      objectFit: 'cover',
-                    }}
-                  />
-                  <CardContent sx={{ p: 2 }}>
+                  <Box sx={{ height: 300, overflow: 'hidden' }}>
+                    <ImageCarousel
+                      images={item.imageUrls}
+                      alt={item.name}
+                      height={300}
+                      showNavigation={false}
+                      showDots={true}
+                      onImageClick={() => setSelectedItem(item)}
+                    />
+                  </Box>
+                  <CardContent sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <Typography 
                       variant="subtitle1" 
                       component="div"
                       sx={{ 
-                        fontWeight: 500,
-                        mb: 0.5
+                        fontWeight: 600,
+                        mb: 0.5,
+                        lineHeight: 1.3,
                       }}
                     >
                       {item.name}
@@ -384,16 +413,16 @@ const Catalogue = () => {
                     <Typography 
                       variant="body2" 
                       color="text.secondary"
-                      sx={{ mb: 1 }}
+                      sx={{ mb: 1, flex: 1 }}
                     >
                       {item.brand}
                     </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
                       <Typography 
                         variant="subtitle2"
                         sx={{ 
-                          fontWeight: 600,
-                          color: 'text.primary'
+                          fontWeight: 700,
+                          color: 'primary.main'
                         }}
                       >
                         ${item.price}
@@ -402,7 +431,7 @@ const Catalogue = () => {
                         label={item.size} 
                         size="small"
                         sx={{ 
-                          fontWeight: 500,
+                          fontWeight: 600,
                           bgcolor: 'primary.main',
                           color: 'primary.contrastText'
                         }}
@@ -435,59 +464,68 @@ const Catalogue = () => {
       <Dialog 
         open={!!selectedItem} 
         onClose={() => setSelectedItem(null)}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+          }
+        }}
       >
         {selectedItem && (
           <>
-            <DialogTitle>
-              <Typography variant="h6" component="div">
+            <DialogTitle sx={{ pb: 1 }}>
+              <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
                 {selectedItem.name}
               </Typography>
               <Typography variant="subtitle2" color="text.secondary">
                 {selectedItem.brand}
               </Typography>
             </DialogTitle>
-            <DialogContent>
-              <Box sx={{ mb: 2 }}>
-                <img 
-                  src={selectedItem.imageUrl} 
+            <DialogContent sx={{ pt: 2 }}>
+              <Box sx={{ mb: 3 }}>
+                <ImageCarousel
+                  images={selectedItem.imageUrls}
                   alt={selectedItem.name}
-                  style={{ 
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: '500px',
-                    objectFit: 'cover'
-                  }}
+                  height={400}
+                  showNavigation={true}
+                  showDots={true}
+                  autoPlay={true}
+                  autoPlayInterval={4000}
                 />
               </Box>
-              <Typography variant="body1" paragraph>
+              <Typography variant="body1" paragraph sx={{ lineHeight: 1.6 }}>
                 {selectedItem.description}
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
                 <Chip 
                   label={`Size: ${selectedItem.size}`}
-                  sx={{ fontWeight: 500 }}
+                  sx={{ fontWeight: 600 }}
                 />
                 <Chip 
                   label={`Type: ${selectedItem.type}`}
-                  sx={{ fontWeight: 500 }}
+                  sx={{ fontWeight: 600 }}
                 />
                 <Chip 
                   label={`Color: ${selectedItem.color}`}
-                  sx={{ fontWeight: 500 }}
+                  sx={{ fontWeight: 600 }}
                 />
               </Box>
               <Typography 
-                variant="h6" 
+                variant="h5" 
                 sx={{ 
-                  fontWeight: 600,
+                  fontWeight: 700,
                   color: 'primary.main'
                 }}
               >
                 ${selectedItem.price}
               </Typography>
             </DialogContent>
+            <DialogActions sx={{ p: 3, pt: 1 }}>
+              <Button onClick={() => setSelectedItem(null)} variant="outlined">
+                Close
+              </Button>
+            </DialogActions>
           </>
         )}
       </Dialog>

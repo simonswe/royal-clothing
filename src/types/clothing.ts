@@ -11,7 +11,7 @@ export interface ClothingItem {
   color: string;
   size: ClothingSize;
   type: ClothingType;
-  imageUrl: string;
+  imageUrls: string[]; // Changed from imageUrl to imageUrls array
   createdAt: Date;
   updatedAt: Date;
 }

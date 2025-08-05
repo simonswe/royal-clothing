@@ -20,10 +20,15 @@ import {
   Divider,
   Skeleton,
   CircularProgress,
+  Alert,
+  useTheme,
+  useMediaQuery,
+  Chip,
 } from '@mui/material';
-import { Delete as DeleteIcon, Add as AddIcon, Upload as UploadIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Add as AddIcon, Upload as UploadIcon, Edit as EditIcon, Close as CloseIcon } from '@mui/icons-material';
 import { ClothingItem, ClothingSize, ClothingType } from '../types/clothing';
 import { addClothingItem, deleteClothingItem, getClothingItems, updateClothingItem } from '../services/clothingService';
+import ImageCarousel from './ImageCarousel';
 
 const SIZES: ClothingSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const TYPES: ClothingType[] = ['Shirt', 'Pants', 'Dress', 'Jacket', 'Skirt', 'Shoes', 'Accessory'];
@@ -31,7 +36,7 @@ const TYPES: ClothingType[] = ['Shirt', 'Pants', 'Dress', 'Jacket', 'Skirt', 'Sh
 // Loading skeleton for products
 const LoadingSkeleton = () => (
   <>
-    {[1, 2, 3, 4].map((item) => (
+    {[1, 2, 3, 4, 5, 6].map((item) => (
       <Box 
         key={item}
         gridColumn={{ 
@@ -44,22 +49,22 @@ const LoadingSkeleton = () => (
         <Card>
           <Skeleton 
             variant="rectangular" 
-            height={400}
+            height={300}
             animation="wave"
           />
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <CardContent sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
               <Box sx={{ flex: 1 }}>
-                <Skeleton animation="wave" height={24} width="80%" sx={{ mb: 1 }} />
-                <Skeleton animation="wave" height={20} width="60%" sx={{ mb: 1 }} />
+                <Skeleton animation="wave" height={20} width="80%" sx={{ mb: 1 }} />
+                <Skeleton animation="wave" height={16} width="60%" />
               </Box>
               <Skeleton animation="wave" variant="circular" width={32} height={32} />
             </Box>
             <Divider sx={{ my: 1 }} />
-            <Skeleton animation="wave" height={20} width="40%" sx={{ mb: 0.5 }} />
-            <Skeleton animation="wave" height={20} width="40%" sx={{ mb: 0.5 }} />
-            <Skeleton animation="wave" height={20} width="40%" sx={{ mb: 0.5 }} />
-            <Skeleton animation="wave" height={24} width="30%" sx={{ mt: 1 }} />
+            <Skeleton animation="wave" height={16} width="40%" sx={{ mb: 0.5 }} />
+            <Skeleton animation="wave" height={16} width="40%" sx={{ mb: 0.5 }} />
+            <Skeleton animation="wave" height={16} width="40%" sx={{ mb: 0.5 }} />
+            <Skeleton animation="wave" height={20} width="30%" sx={{ mt: 1 }} />
           </CardContent>
         </Card>
       </Box>
@@ -80,16 +85,23 @@ const AdminDashboard = () => {
     color: '',
     size: '' as ClothingSize,
     type: '' as ClothingType,
-    imageUrl: '',
+    imageUrls: [] as string[],
   });
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [error, setError] = useState('');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const loadItems = async () => {
     try {
+      setLoading(true);
       const fetchedItems = await getClothingItems();
       setItems(fetchedItems);
     } catch (error) {
       console.error('Error loading items:', error);
+      setError('Failed to load items');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,7 +120,7 @@ const AdminDashboard = () => {
         color: item.color,
         size: item.size,
         type: item.type,
-        imageUrl: item.imageUrl,
+        imageUrls: item.imageUrls,
       });
     } else {
       setSelectedItem(null);
@@ -120,10 +132,11 @@ const AdminDashboard = () => {
         color: '',
         size: '' as ClothingSize,
         type: '' as ClothingType,
-        imageUrl: '',
+        imageUrls: [],
       });
     }
-    setSelectedImage(null);
+    setSelectedImages([]);
+    setError('');
     setOpen(true);
   };
 
@@ -138,9 +151,10 @@ const AdminDashboard = () => {
       color: '',
       size: '' as ClothingSize,
       type: '' as ClothingType,
-      imageUrl: '',
+      imageUrls: [],
     });
-    setSelectedImage(null);
+    setSelectedImages([]);
+    setError('');
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -151,14 +165,33 @@ const AdminDashboard = () => {
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setSelectedImage(event.target.files[0]);
+    if (event.target.files) {
+      const files = Array.from(event.target.files);
+      setSelectedImages(prev => [...prev, ...files]);
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveExistingImage = (index: number) => {
+    setNewItem(prev => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
+      setError('');
+
+      // Validate required fields
+      if (!newItem.name.trim() || !newItem.brand.trim() || !newItem.price || !newItem.size || !newItem.type) {
+        setError('Please fill in all required fields');
+        return;
+      }
 
       if (selectedItem) {
         // Update existing item
@@ -168,25 +201,25 @@ const AdminDashboard = () => {
             ...newItem,
             price: Number(newItem.price),
           },
-          selectedImage || undefined
+          selectedImages.length > 0 ? selectedImages : undefined
         );
       } else {
         // Add new item
-        if (!selectedImage) {
-          alert('Please select an image');
+        if (selectedImages.length === 0) {
+          setError('Please select at least one image');
           return;
         }
         await addClothingItem({
           ...newItem,
           price: Number(newItem.price),
-        }, selectedImage);
+        }, selectedImages);
       }
       
       handleClose();
       loadItems();
     } catch (error) {
       console.error('Error saving item:', error);
-      alert('Error saving item');
+      setError('Error saving item. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -199,11 +232,11 @@ const AdminDashboard = () => {
 
     try {
       setLoading(true);
-      await deleteClothingItem(item.id, item.imageUrl);
+      await deleteClothingItem(item.id, item.imageUrls);
       loadItems();
     } catch (error) {
       console.error('Error deleting item:', error);
-      alert('Error deleting item');
+      setError('Error deleting item. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -215,9 +248,11 @@ const AdminDashboard = () => {
         display: 'flex', 
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 4
+        mb: 4,
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 2, sm: 0 }
       }}>
-        <Typography variant="h5" component="h1">
+        <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
           Manage Inventory
         </Typography>
         <Button
@@ -225,10 +260,21 @@ const AdminDashboard = () => {
           startIcon={<AddIcon />}
           onClick={() => handleOpen()}
           disabled={loading}
+          sx={{
+            '&:hover': {
+              transform: 'translateY(-1px)',
+            },
+          }}
         >
           Add New Item
         </Button>
       </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+          {error}
+        </Alert>
+      )}
 
       <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap={3}>
         {loading ? (
@@ -242,7 +288,7 @@ const AdminDashboard = () => {
               color: 'text.secondary'
             }}
           >
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
               No items in inventory
             </Typography>
             <Typography variant="body2">
@@ -260,27 +306,27 @@ const AdminDashboard = () => {
                 lg: 'span 3'
               }}
             >
-              <Card>
-                <CardMedia
-                  component="img"
-                  height="400"
-                  image={item.imageUrl}
-                  alt={item.name}
-                  sx={{
-                    objectFit: 'cover',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => handleOpen(item)}
-                />
-                <CardContent sx={{ p: 2 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ height: 300, overflow: 'hidden' }}>
+                  <ImageCarousel
+                    images={item.imageUrls}
+                    alt={item.name}
+                    height={300}
+                    showNavigation={false}
+                    showDots={true}
+                    onImageClick={() => handleOpen(item)}
+                  />
+                </Box>
+                <CardContent sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                     <Box sx={{ flex: 1, cursor: 'pointer' }} onClick={() => handleOpen(item)}>
                       <Typography 
                         variant="subtitle1" 
                         component="div"
                         sx={{ 
-                          fontWeight: 500,
-                          mb: 0.5
+                          fontWeight: 600,
+                          mb: 0.5,
+                          lineHeight: 1.3,
                         }}
                       >
                         {item.name}
@@ -304,22 +350,22 @@ const AdminDashboard = () => {
                     </IconButton>
                   </Box>
                   <Divider sx={{ my: 1 }} />
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="body2" color="text.secondary">
+                  <Box sx={{ mt: 1, flex: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                       Type: {item.type}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
                       Size: {item.size}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                       Color: {item.color}
                     </Typography>
                     <Typography 
                       variant="subtitle2"
                       sx={{ 
-                        fontWeight: 600,
-                        color: 'text.primary',
-                        mt: 1
+                        fontWeight: 700,
+                        color: 'primary.main',
+                        mt: 'auto'
                       }}
                     >
                       ${item.price}
@@ -332,66 +378,156 @@ const AdminDashboard = () => {
         )}
       </Box>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          <Typography variant="h6">
+      <Dialog 
+        open={open} 
+        onClose={handleClose} 
+        maxWidth="md" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
             {selectedItem ? 'Edit Item' : 'Add New Item'}
           </Typography>
         </DialogTitle>
         <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+              {error}
+            </Alert>
+          )}
+          
           <Box sx={{ mt: 2 }}>
             <Box display="grid" gridTemplateColumns="repeat(12, 1fr)" gap={2}>
               <Box gridColumn="span 12">
-                {selectedItem && !selectedImage && (
+                <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+                  Images ({newItem.imageUrls.length + selectedImages.length})
+                </Typography>
+                
+                {/* Existing Images */}
+                {newItem.imageUrls.length > 0 && (
                   <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Current Image:
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Current Images:
                     </Typography>
-                    <img 
-                      src={selectedItem.imageUrl} 
-                      alt={selectedItem.name}
-                      style={{ 
-                        width: '100%', 
-                        height: 200, 
-                        objectFit: 'cover',
-                        marginBottom: 8
-                      }} 
-                    />
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {newItem.imageUrls.map((url, index) => (
+                        <Box key={index} sx={{ position: 'relative' }}>
+                          <img 
+                            src={url} 
+                            alt={`${newItem.name} - Image ${index + 1}`}
+                            style={{ 
+                              width: 100, 
+                              height: 100, 
+                              objectFit: 'cover',
+                              borderRadius: '8px',
+                            }} 
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveExistingImage(index)}
+                            sx={{
+                              position: 'absolute',
+                              top: -8,
+                              right: -8,
+                              bgcolor: 'error.main',
+                              color: 'white',
+                              '&:hover': {
+                                bgcolor: 'error.dark',
+                              },
+                            }}
+                          >
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ))}
+                    </Box>
                   </Box>
                 )}
+
+                {/* New Selected Images */}
+                {selectedImages.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      New Images:
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {selectedImages.map((file, index) => (
+                        <Box key={index} sx={{ position: 'relative' }}>
+                          <img 
+                            src={URL.createObjectURL(file)} 
+                            alt={`New image ${index + 1}`}
+                            style={{ 
+                              width: 100, 
+                              height: 100, 
+                              objectFit: 'cover',
+                              borderRadius: '8px',
+                            }} 
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveImage(index)}
+                            sx={{
+                              position: 'absolute',
+                              top: -8,
+                              right: -8,
+                              bgcolor: 'error.main',
+                              color: 'white',
+                              '&:hover': {
+                                bgcolor: 'error.dark',
+                              },
+                            }}
+                          >
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+
+                {/* Upload Button */}
                 <Button
                   variant="outlined"
                   component="label"
                   fullWidth
                   startIcon={<UploadIcon />}
-                  sx={{ height: 200, borderStyle: 'dashed' }}
+                  sx={{ 
+                    height: 120, 
+                    borderStyle: 'dashed',
+                    borderRadius: 2,
+                  }}
                   disabled={loading}
                 >
                   {loading ? (
                     <CircularProgress size={24} />
                   ) : (
-                    selectedImage ? 'Change Image' : (selectedItem ? 'Change Image' : 'Upload Image')
+                    selectedImages.length > 0 ? 'Add More Images' : 'Upload Images'
                   )}
                   <input
                     type="file"
                     hidden
                     accept="image/*"
+                    multiple
                     onChange={handleImageChange}
                     disabled={loading}
                   />
                 </Button>
-                {selectedImage && (
-                  <Typography variant="caption" display="block" sx={{ mt: 1, textAlign: 'center' }}>
-                    Selected: {selectedImage.name}
-                  </Typography>
-                )}
+                <Typography variant="caption" display="block" sx={{ mt: 1, textAlign: 'center', color: 'text.secondary' }}>
+                  You can select multiple images. At least one image is required.
+                </Typography>
               </Box>
               <Box gridColumn="span 12">
                 <TextField
                   fullWidth
-                  label="Name"
+                  label="Name *"
                   value={newItem.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
+                  disabled={loading}
                 />
               </Box>
               <Box gridColumn="span 12">
@@ -402,40 +538,45 @@ const AdminDashboard = () => {
                   label="Description"
                   value={newItem.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
+                  disabled={loading}
                 />
               </Box>
               <Box gridColumn={{ xs: 'span 12', sm: 'span 6' }}>
                 <TextField
                   fullWidth
-                  label="Brand"
+                  label="Brand *"
                   value={newItem.brand}
                   onChange={(e) => handleInputChange('brand', e.target.value)}
+                  disabled={loading}
                 />
               </Box>
               <Box gridColumn={{ xs: 'span 12', sm: 'span 6' }}>
                 <TextField
                   fullWidth
                   type="number"
-                  label="Price"
+                  label="Price *"
                   value={newItem.price}
                   onChange={(e) => handleInputChange('price', e.target.value)}
+                  disabled={loading}
                 />
               </Box>
               <Box gridColumn={{ xs: 'span 12', sm: 'span 6' }}>
                 <TextField
                   fullWidth
-                  label="Color"
+                  label="Color *"
                   value={newItem.color}
                   onChange={(e) => handleInputChange('color', e.target.value)}
+                  disabled={loading}
                 />
               </Box>
               <Box gridColumn={{ xs: 'span 12', sm: 'span 6' }}>
                 <FormControl fullWidth>
-                  <InputLabel>Size</InputLabel>
+                  <InputLabel>Size *</InputLabel>
                   <Select
                     value={newItem.size}
-                    label="Size"
+                    label="Size *"
                     onChange={(e) => handleInputChange('size', e.target.value)}
+                    disabled={loading}
                   >
                     {SIZES.map((size) => (
                       <MenuItem key={size} value={size}>
@@ -447,11 +588,12 @@ const AdminDashboard = () => {
               </Box>
               <Box gridColumn="span 12">
                 <FormControl fullWidth>
-                  <InputLabel>Type</InputLabel>
+                  <InputLabel>Type *</InputLabel>
                   <Select
                     value={newItem.type}
-                    label="Type"
+                    label="Type *"
                     onChange={(e) => handleInputChange('type', e.target.value)}
+                    disabled={loading}
                   >
                     {TYPES.map((type) => (
                       <MenuItem key={type} value={type}>
@@ -464,15 +606,20 @@ const AdminDashboard = () => {
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={handleClose} disabled={loading}>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button onClick={handleClose} disabled={loading} variant="outlined">
             Cancel
           </Button>
           <Button 
             onClick={handleSubmit} 
             variant="contained" 
             disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : <AddIcon />}
+            startIcon={loading ? <CircularProgress size={20} /> : (selectedItem ? <EditIcon /> : <AddIcon />)}
+            sx={{
+              '&:hover': {
+                transform: 'translateY(-1px)',
+              },
+            }}
           >
             {loading ? 'Saving...' : (selectedItem ? 'Save Changes' : 'Add Item')}
           </Button>

@@ -1,4 +1,4 @@
-# Royal Clothing - Catalogue Site
+# WearAgain by Royal Clothing
 
 A modern clothing catalogue site built with React, TypeScript, Material-UI, and Firebase.
 

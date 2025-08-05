@@ -9,7 +9,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'White',
     size: 'M',
     type: 'Shirt',
-    imageUrl: 'https://images.unsplash.com/photo-1604695573706-53170668f6a6?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1604695573706-53170668f6a6?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Slim Fit Black Dress Pants',
@@ -19,7 +23,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Black',
     size: 'L',
     type: 'Pants',
-    imageUrl: 'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Navy Blue Blazer',
@@ -29,7 +37,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Navy',
     size: 'M',
     type: 'Jacket',
-    imageUrl: 'https://images.unsplash.com/photo-1592878940526-0214b0f374f6?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1592878940526-0214b0f374f6?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1551489186-cf8726f514f8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Floral Summer Dress',
@@ -39,7 +51,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Multicolor',
     size: 'S',
     type: 'Dress',
-    imageUrl: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1566624790190-511a09f6ddbd?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Leather Oxford Shoes',
@@ -49,7 +65,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Brown',
     size: 'XL',
     type: 'Shoes',
-    imageUrl: 'https://images.unsplash.com/photo-1614252369475-531eba835eb1?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1614252369475-531eba835eb1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1560769629-975ec94e6a86?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Pleated Midi Skirt',
@@ -59,7 +79,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Grey',
     size: 'M',
     type: 'Skirt',
-    imageUrl: 'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1551163943-3f6a855d1153?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Silk Neck Scarf',
@@ -69,7 +93,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Red',
     size: 'S',
     type: 'Accessory',
-    imageUrl: 'https://images.unsplash.com/photo-1584030373081-f37b7bb4fa8e?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1584030373081-f37b7bb4fa8e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Wool Peacoat',
@@ -79,7 +107,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Black',
     size: 'L',
     type: 'Jacket',
-    imageUrl: 'https://images.unsplash.com/photo-1551489186-cf8726f514f8?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1551489186-cf8726f514f8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1592878940526-0214b0f374f6?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Striped Cotton Shirt',
@@ -89,7 +121,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Blue',
     size: 'M',
     type: 'Shirt',
-    imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1604695573706-53170668f6a6?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Leather Belt',
@@ -99,7 +135,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Brown',
     size: 'M',
     type: 'Accessory',
-    imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1584030373081-f37b7bb4fa8e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Evening Gown',
@@ -109,7 +149,11 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Black',
     size: 'S',
     type: 'Dress',
-    imageUrl: 'https://images.unsplash.com/photo-1566624790190-511a09f6ddbd?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1566624790190-511a09f6ddbd?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=800&q=80'
+    ]
   },
   {
     name: 'Chino Pants',
@@ -119,6 +163,10 @@ export const sampleClothingItems: Omit<ClothingItem, 'id' | 'createdAt' | 'updat
     color: 'Khaki',
     size: 'M',
     type: 'Pants',
-    imageUrl: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=800&q=80'
+    imageUrls: [
+      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1594633313593-bab3825d0caf?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?auto=format&fit=crop&w=800&q=80'
+    ]
   }
 ]; 
