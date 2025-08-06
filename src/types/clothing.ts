@@ -1,4 +1,4 @@
-export type ClothingSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
+export type ClothingSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | 'One Size';
 
 export type ClothingType = 'Shirt' | 'Pants' | 'Dress' | 'Jacket' | 'Skirt' | 'Shoes' | 'Accessory';
 

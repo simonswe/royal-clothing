@@ -26,7 +26,7 @@ import { ClothingItem, ClothingSize, ClothingType } from '../types/clothing';
 import { addClothingItem, deleteClothingItem, getClothingItems, updateClothingItem } from '../services/clothingService';
 import ImageCarousel from './ImageCarousel';
 
-const SIZES: ClothingSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const SIZES: ClothingSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
 const TYPES: ClothingType[] = ['Shirt', 'Pants', 'Dress', 'Jacket', 'Skirt', 'Shoes', 'Accessory'];
 
 // Loading skeleton for products
